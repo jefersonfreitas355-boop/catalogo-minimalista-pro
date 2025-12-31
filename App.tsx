@@ -1,0 +1,62 @@
+
+import React from 'react';
+import { HashRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import Home from './pages/Home';
+import Catalog from './pages/Catalog';
+import Admin from './pages/Admin';
+
+const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const location = useLocation();
+  const isAdminPage = location.pathname === '/admin';
+
+  return (
+    <div className="min-h-screen flex flex-col bg-background-light dark:bg-background-dark selection:bg-primary/10 selection:text-primary">
+
+      <div className="flex-1 flex flex-col relative">
+        {children}
+      </div>
+
+      {!isAdminPage && (
+        <footer className="w-full py-10 mt-auto border-t border-[#f0f2f4] dark:border-gray-800">
+          <div className="max-w-[1440px] mx-auto px-6 flex flex-col items-center text-center gap-6">
+            <div className="space-y-2">
+              <p className="text-text-secondary dark:text-gray-500 text-sm font-bold uppercase tracking-widest">
+                © 2025 Artmindsgrafhics | Catálogo Auxiliar
+              </p>
+              <p className="text-text-secondary dark:text-gray-500 text-xs font-medium max-w-2xl">
+                Este site é uma ferramenta de apoio ao cliente. Não representa a marca oficial.
+              </p>
+            </div>
+
+
+            <div className="flex items-center gap-6">
+              <button
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                className="text-text-secondary dark:text-gray-500 hover:text-primary text-sm font-bold transition-colors flex items-center gap-2"
+              >
+                <span className="material-symbols-outlined text-[18px]">arrow_upward</span>
+                Voltar ao Topo
+              </button>
+            </div>
+          </div>
+        </footer>
+      )}
+    </div>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <Router>
+      <Layout>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/catalog" element={<Catalog />} />
+          <Route path="/admin" element={<Admin />} />
+        </Routes>
+      </Layout>
+    </Router>
+  );
+};
+
+export default App;

@@ -1,0 +1,67 @@
+// Tipos TypeScript gerados para Supabase
+// Estes tipos correspondem à estrutura do banco de dados
+
+export type Json =
+    | string
+    | number
+    | boolean
+    | null
+    | { [key: string]: Json | undefined }
+    | Json[]
+
+export interface Database {
+    public: {
+        Tables: {
+            products: {
+                Row: {
+                    id: string
+                    name: string
+                    category: string
+                    description: string | null
+                    price: number
+                    old_price: number | null
+                    stock: number
+                    unit: string | null
+                    status: string | null
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    name: string
+                    category: string
+                    description?: string | null
+                    price: number
+                    old_price?: number | null
+                    stock?: number
+                    unit?: string | null
+                    status?: string | null
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    id?: string
+                    name?: string
+                    category?: string
+                    description?: string | null
+                    price?: number
+                    old_price?: number | null
+                    stock?: number
+                    unit?: string | null
+                    status?: string | null
+                    created_at?: string
+                    updated_at?: string
+                }
+            }
+        }
+        Views: {
+            [_ in never]: never
+        }
+        Functions: {
+            [_ in never]: never
+        }
+        Enums: {
+            [_ in never]: never
+        }
+    }
+}
