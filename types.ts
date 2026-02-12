@@ -13,9 +13,16 @@ export interface Product {
   unit?: string; // Quantidade/peso do produto (ex: "1kg", "500g", "1L")
   outOfStock?: boolean;
   originalCategory?: string;
+  flavors?: string[]; // Sabores disponíveis (ex: ["Crocante", "Ao Leite", "Branco"])
 }
 
 export interface CartItem extends Product {
+  quantity: number;
+  flavor?: string; // Sabor selecionado para este item do carrinho
+}
+
+export interface FlavorQuantity {
+  flavor: string;
   quantity: number;
 }
 

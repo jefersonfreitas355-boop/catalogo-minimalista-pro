@@ -1,12 +1,12 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
 import { CartItem, Product } from '../types';
 
 interface CartContextType {
   cart: CartItem[];
-  addToCart: (product: Product, quantity?: number) => void;
-  removeFromCart: (productId: string) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
+  addToCart: (product: Product, quantity?: number, flavor?: string) => void;
+  removeFromCart: (productId: string, flavor?: string) => void;
+  updateQuantity: (productId: string, quantity: number, flavor?: string) => void;
   clearCart: () => void;
   totalItems: number;
   totalPrice: number;
@@ -23,63 +23,75 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
 
-  const openCart = () => setIsCartOpen(true);
-  const closeCart = () => setIsCartOpen(false);
+  const openCart = useCallback(() => setIsCartOpen(true), []);
+  const closeCart = useCallback(() => setIsCartOpen(false), []);
 
-  const addToCart = (product: Product, quantity = 1) => {
+  const addToCart = useCallback((product: Product, quantity = 1, flavor?: string) => {
     setCart(prev => {
-      const existing = prev.find(item => item.id === product.id);
+      // Encontrar item existente considerando produto E sabor
+      const existing = prev.find(item =>
+        item.id === product.id && item.flavor === flavor
+      );
+
       if (existing) {
         return prev.map(item =>
-          item.id === product.id
+          item.id === product.id && item.flavor === flavor
             ? { ...item, quantity: item.quantity + quantity }
             : item
         );
       }
-      return [...prev, { ...product, quantity }];
+
+      // Adicionar novo item com sabor
+      return [...prev, { ...product, quantity, flavor }];
     });
-    openCart();
-  };
+    setIsCartOpen(true);
+  }, []);
 
-  const removeFromCart = (productId: string) => {
-    setCart(prev => prev.filter(item => item.id !== productId));
-  };
+  const removeFromCart = useCallback((productId: string, flavor?: string) => {
+    setCart(prev => prev.filter(item =>
+      !(item.id === productId && item.flavor === flavor)
+    ));
+  }, []);
 
-  const updateQuantity = (productId: string, quantity: number) => {
+  const updateQuantity = useCallback((productId: string, quantity: number, flavor?: string) => {
     if (quantity <= 0) {
-      removeFromCart(productId);
+      setCart(prev => prev.filter(item =>
+        !(item.id === productId && item.flavor === flavor)
+      ));
       return;
     }
     setCart(prev => prev.map(item =>
-      item.id === productId ? { ...item, quantity } : item
+      item.id === productId && item.flavor === flavor ? { ...item, quantity } : item
     ));
-  };
+  }, []);
 
-  const clearCart = () => setCart([]);
+  const clearCart = useCallback(() => setCart([]), []);
 
-  const totalItems = React.useMemo(() =>
+  const totalItems = useMemo(() =>
     cart.reduce((sum, item) => sum + item.quantity, 0),
     [cart]
   );
 
-  const totalPrice = React.useMemo(() =>
+  const totalPrice = useMemo(() =>
     cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
     [cart]
   );
 
+  const contextValue = useMemo(() => ({
+    cart,
+    addToCart,
+    removeFromCart,
+    updateQuantity,
+    clearCart,
+    totalItems,
+    totalPrice,
+    isCartOpen,
+    openCart,
+    closeCart
+  }), [cart, addToCart, removeFromCart, updateQuantity, clearCart, totalItems, totalPrice, isCartOpen, openCart, closeCart]);
+
   return (
-    <CartContext.Provider value={{
-      cart,
-      addToCart,
-      removeFromCart,
-      updateQuantity,
-      clearCart,
-      totalItems,
-      totalPrice,
-      isCartOpen,
-      openCart,
-      closeCart
-    }}>
+    <CartContext.Provider value={contextValue}>
       {children}
     </CartContext.Provider>
   );

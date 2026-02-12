@@ -14,7 +14,7 @@ const Navbar: React.FC = () => {
               <path d="M44 4H30.6666V17.3334H17.3334V30.6666H4V44H44V4Z" fill="currentColor"></path>
             </svg>
           </div>
-          <h2 className="text-lg font-bold leading-tight tracking-[-0.015em]">Catálogo Minimalista</h2>
+          <h2 className="text-lg font-bold leading-tight tracking-[-0.015em]">Catálogo Auxiliar: <span className="text-primary">Ufa Penha</span></h2>
         </Link>
         <button
           id="cart-toggle-btn"

@@ -31,8 +31,10 @@ const Admin: React.FC = () => {
         unit: '',
         image: '',
         status: 'Em estoque',
-        outOfStock: false
+        outOfStock: false,
+        flavors: []
     });
+    const [flavorInput, setFlavorInput] = useState('');
 
     const loadProducts = async () => {
         setLoading(true);
@@ -70,9 +72,11 @@ const Admin: React.FC = () => {
                 unit: '',
                 image: '',
                 status: 'Em estoque',
-                outOfStock: false
+                outOfStock: false,
+                flavors: []
             });
             setPriceInput('');
+            setFlavorInput('');
             setIsEditing(null);
             loadProducts();
         } catch (error: any) {
@@ -138,6 +142,7 @@ const Admin: React.FC = () => {
         const { id, ...rest } = product;
         setFormData(rest);
         setPriceInput(product.price.toString().replace('.', ','));
+        setFlavorInput('');
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
@@ -157,26 +162,63 @@ const Admin: React.FC = () => {
             let updates: Partial<Product>;
 
             if (isPromoted) {
-                // Restore original category or default
+                // REMOVER DA PROMOÇÃO
+                // Restaurar categoria original e preço original
+                const originalPrice = product.oldPrice || product.price;
+
                 updates = {
-                    category: product.originalCategory || CATEGORIES[1], // Default to first non-promo category if missing
-                    originalCategory: '' // Clear it (optional, but keeps data clean)
+                    category: product.originalCategory || CATEGORIES[1],
+                    originalCategory: '',
+                    price: originalPrice,
+                    oldPrice: undefined // Remove o oldPrice
                 };
+
+                await updateProductFirestore(product.id, updates);
+                loadProducts();
+                alert(`✅ Produto "${product.name}" removido da promoção!\n\n💰 Preço restaurado: R$ ${originalPrice.toFixed(2).replace('.', ',')}\n📂 Categoria: ${product.originalCategory || CATEGORIES[1]}`);
             } else {
-                // Promote to Promoções
+                // ADICIONAR À PROMOÇÃO
+                // Solicitar preço promocional
+                const promoMessage = `🎯 ADICIONAR À PROMOÇÃO\n\nProduto: ${product.name}\nPreço Atual: R$ ${product.price.toFixed(2).replace('.', ',')}\n\n💰 Digite o PREÇO PROMOCIONAL:`;
+                const promoPriceInput = window.prompt(promoMessage);
+
+                if (promoPriceInput === null) {
+                    // Usuário cancelou
+                    return;
+                }
+
+                // Validar e converter o preço
+                const promoPrice = parseFloat(promoPriceInput.replace(',', '.'));
+
+                if (isNaN(promoPrice) || promoPrice <= 0) {
+                    alert('❌ Preço inválido! Por favor, digite um valor válido.\n\nExemplo: 10,50 ou 10.50');
+                    return;
+                }
+
+                if (promoPrice >= product.price) {
+                    const confirm = window.confirm(
+                        `⚠️ ATENÇÃO!\n\nO preço promocional (R$ ${promoPrice.toFixed(2).replace('.', ',')}) é maior ou igual ao preço atual (R$ ${product.price.toFixed(2).replace('.', ',')}).\n\nDeseja continuar mesmo assim?`
+                    );
+                    if (!confirm) return;
+                }
+
+                // Mover para Promoções
                 updates = {
                     category: 'Promoções',
-                    originalCategory: product.category
+                    originalCategory: product.category,
+                    oldPrice: product.price, // Salvar preço original
+                    price: promoPrice // Novo preço promocional
                 };
-            }
 
-            await updateProductFirestore(product.id, updates);
-            // Optimistic update or reload
-            loadProducts();
-            alert(isPromoted ? 'Produto removido da promoção!' : 'Produto movido para Promoções!');
+                await updateProductFirestore(product.id, updates);
+                loadProducts();
+
+                const discount = ((product.price - promoPrice) / product.price * 100).toFixed(0);
+                alert(`🎉 Produto adicionado à promoção!\n\n📦 ${product.name}\n💰 De: R$ ${product.price.toFixed(2).replace('.', ',')}\n🔥 Por: R$ ${promoPrice.toFixed(2).replace('.', ',')}\n📊 Desconto: ${discount}%\n\n✅ O produto agora aparece APENAS na categoria "Promoções"!`);
+            }
         } catch (error) {
             console.error('Erro ao atualizar promoção:', error);
-            alert('Erro ao atualizar promoção.');
+            alert('❌ Erro ao atualizar promoção. Tente novamente.');
         }
     };
 
@@ -466,6 +508,62 @@ const Admin: React.FC = () => {
                                     onChange={e => setFormData({ ...formData, description: e.target.value })}
                                     className="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-lg focus:ring-2 focus:ring-primary/20 text-sm font-medium"
                                 />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Sabores (opcional)</label>
+                                <div className="space-y-2">
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            value={flavorInput}
+                                            onChange={e => setFlavorInput(e.target.value)}
+                                            onKeyPress={e => {
+                                                if (e.key === 'Enter') {
+                                                    e.preventDefault();
+                                                    if (flavorInput.trim()) {
+                                                        setFormData({ ...formData, flavors: [...(formData.flavors || []), flavorInput.trim()] });
+                                                        setFlavorInput('');
+                                                    }
+                                                }
+                                            }}
+                                            className="flex-1 bg-gray-50 dark:bg-gray-800 border-none rounded-lg focus:ring-2 focus:ring-primary/20 text-sm font-medium"
+                                            placeholder="Digite um sabor e pressione Enter"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                if (flavorInput.trim()) {
+                                                    setFormData({ ...formData, flavors: [...(formData.flavors || []), flavorInput.trim()] });
+                                                    setFlavorInput('');
+                                                }
+                                            }}
+                                            className="px-4 py-2 bg-primary text-white rounded-lg font-bold hover:bg-primary-hover transition-all"
+                                        >
+                                            Adicionar
+                                        </button>
+                                    </div>
+                                    {formData.flavors && formData.flavors.length > 0 && (
+                                        <div className="flex flex-wrap gap-2">
+                                            {formData.flavors.map((flavor, index) => (
+                                                <span
+                                                    key={index}
+                                                    className="inline-flex items-center gap-1 bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-bold"
+                                                >
+                                                    {flavor}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setFormData({ ...formData, flavors: formData.flavors?.filter((_, i) => i !== index) })}
+                                                        className="hover:text-red-500 transition-colors"
+                                                    >
+                                                        <span className="material-symbols-outlined text-[16px]">close</span>
+                                                    </button>
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
+                                    <p className="text-xs text-text-secondary">Adicione sabores se o produto tiver variações (ex: Crocante, Ao Leite, Branco)</p>
+                                </div>
                             </div>
 
                             <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700">

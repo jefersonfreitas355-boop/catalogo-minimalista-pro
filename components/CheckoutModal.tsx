@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useCart } from '../context/CartContext';
 import { formatCurrency } from '../utils/formatters';
 
@@ -13,39 +13,46 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ onClose }) => {
         name: '',
         address: '',
         reference: '',
+        observations: '',
         shippingAcknowledged: false
     });
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
-    };
+    }, []);
 
-    const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleCheckboxChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData(prev => ({ ...prev, shippingAcknowledged: e.target.checked }));
-    };
+    }, []);
 
-    const isValid =
+    const isValid = useMemo(() =>
         formData.name.trim() !== '' &&
         formData.address.trim() !== '' &&
-        formData.shippingAcknowledged;
+        formData.shippingAcknowledged,
+        [formData.name, formData.address, formData.shippingAcknowledged]
+    );
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = useCallback((e: React.FormEvent) => {
         e.preventDefault();
         if (!isValid) return;
 
         // Gerar mensagem do WhatsApp
-        const itemsList = cart.map(item =>
-            `${item.quantity}x ${item.name} ... ${formatCurrency(item.price * item.quantity)}`
-        ).join('\n');
+        const itemsList = cart.map(item => {
+            const itemName = item.flavor
+                ? `${item.name} - Sabor: ${item.flavor}`
+                : item.name;
+            return `${item.quantity}x ${itemName} ... ${formatCurrency(item.price * item.quantity)}`;
+        }).join('\n');
 
         const total = formatCurrency(totalPrice);
 
-        const message = `*NOVO PEDIDO - Catálogo Minimalista*
+        const message = `*NOVO PEDIDO - Catálogo Auxiliar: Ufa Penha*
 
 *Cliente:* ${formData.name}
 *Endereço:* ${formData.address}
-*Ponto de Ref.:* ${formData.reference || 'N/A'}
+*Ponto de Ref.:* ${formData.reference || 'N/A'}${formData.observations ? `
+*Observações:* ${formData.observations}` : ''}
 
 *Resumo do Pedido:*
 ${itemsList}
@@ -56,7 +63,7 @@ ${itemsList}
 _Aguardo a confirmação e o valor do frete para prosseguir._`;
 
         const encodedMessage = encodeURIComponent(message);
-        const phoneNumber = '5521984122795'; // Substitua pelo número real se tiver, ou deixe genérico
+        const phoneNumber = '552125903295'; // +55 21 2590-3295
         const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
 
         window.open(whatsappUrl, '_blank');
@@ -65,7 +72,7 @@ _Aguardo a confirmação e o valor do frete para prosseguir._`;
         // clearCart(); 
         // closeCart();
         // onClose();
-    };
+    }, [isValid, cart, totalPrice, formData]);
 
     return (
         <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
@@ -98,6 +105,21 @@ _Aguardo a confirmação e o valor do frete para prosseguir._`;
                                 </h3>
                                 <p className="text-sm text-orange-900/80 dark:text-orange-200/80 leading-relaxed">
                                     O valor do frete <span className="font-black underline">NÃO</span> está incluso no total. Ele será calculado e informado pelo atendente após o recebimento do pedido.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Delivery Time Warning */}
+                    <div className="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 p-4 rounded-r-lg shadow-sm">
+                        <div className="flex items-start gap-3">
+                            <span className="material-symbols-outlined text-blue-600 dark:text-blue-400 text-3xl">schedule</span>
+                            <div>
+                                <h3 className="font-bold text-blue-800 dark:text-blue-200 text-sm uppercase tracking-wide mb-1">
+                                    Horário de Entrega
+                                </h3>
+                                <p className="text-sm text-blue-900/80 dark:text-blue-200/80 leading-relaxed">
+                                    Olá! 👋 Nosso horário de frete é das <span className="font-black">08:00 às 17:00</span>. Pedidos realizados após esse horário serão entregues no próximo dia útil. Obrigado pela compreensão! 😊
                                 </p>
                             </div>
                         </div>
@@ -145,6 +167,20 @@ _Aguardo a confirmação e o valor do frete para prosseguir._`;
                                 onChange={handleChange}
                                 placeholder="Ex: Ao lado da padaria..."
                                 className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-text-main dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-bold text-text-main dark:text-white mb-1.5">
+                                Observações
+                            </label>
+                            <textarea
+                                name="observations"
+                                value={formData.observations}
+                                onChange={handleChange}
+                                placeholder="Alguma informação adicional? (Opcional)"
+                                rows={3}
+                                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-text-main dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none resize-none"
                             />
                         </div>
 

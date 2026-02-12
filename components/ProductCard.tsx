@@ -1,8 +1,9 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Product } from '../types';
 import { useCart } from '../context/CartContext';
 import { formatCurrency } from '../utils/formatters';
+import FlavorSelectionModal from './FlavorSelectionModal';
 
 interface ProductCardProps {
   product: Product;
@@ -10,8 +11,21 @@ interface ProductCardProps {
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { addToCart } = useCart();
+  const [isFlavorModalOpen, setIsFlavorModalOpen] = useState(false);
   const formattedPrice = formatCurrency(product.price);
   const formattedOldPrice = product.oldPrice ? formatCurrency(product.oldPrice) : null;
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    // Se o produto tem sabores, abrir modal
+    if (product.flavors && product.flavors.length > 0) {
+      setIsFlavorModalOpen(true);
+    } else {
+      // Caso contrário, adicionar direto ao carrinho
+      addToCart(product);
+    }
+  };
 
 
 
@@ -58,10 +72,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </div>
         </div>
         <button
-          onClick={(e) => {
-            e.stopPropagation();
-            addToCart(product);
-          }}
+          onClick={handleAddToCart}
           disabled={!!product.outOfStock}
           className={`flex items-center justify-center size-12 rounded-full shadow-md transition-all duration-300 ${product.outOfStock
             ? 'bg-gray-200 dark:bg-gray-700 cursor-not-allowed text-gray-400'
@@ -72,6 +83,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           <span className="material-symbols-outlined text-[24px]">add_shopping_cart</span>
         </button>
       </div>
+
+      {/* Modal de Seleção de Sabores */}
+      <FlavorSelectionModal
+        product={product}
+        isOpen={isFlavorModalOpen}
+        onClose={() => setIsFlavorModalOpen(false)}
+      />
     </article>
   );
 };

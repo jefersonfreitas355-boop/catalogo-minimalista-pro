@@ -48,13 +48,18 @@ const CartSidebar: React.FC = () => {
                             </button>
                         </div>
                     ) : (
-                        cart.map(item => (
-                            <div key={item.id} className="flex gap-4 p-3 bg-white dark:bg-[#1c2433] rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm relative group">
+                        cart.map((item, index) => (
+                            <div key={`${item.id}-${item.flavor || 'default'}-${index}`} className="flex gap-4 p-3 bg-white dark:bg-[#1c2433] rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm relative group">
 
                                 <div className="flex-1 flex flex-col justify-between">
                                     <div>
                                         <h3 className="font-bold text-text-main dark:text-white line-clamp-1">{item.name}</h3>
-                                        <p className="text-primary font-bold text-sm">
+                                        {item.flavor && (
+                                            <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
+                                                Sabor: <span className="font-semibold text-primary">{item.flavor}</span>
+                                            </p>
+                                        )}
+                                        <p className="text-primary font-bold text-sm mt-1">
                                             {formatCurrency(item.price)}
                                         </p>
                                     </div>
@@ -62,21 +67,21 @@ const CartSidebar: React.FC = () => {
                                     <div className="flex items-center gap-3 mt-2">
                                         <div className="flex items-center bg-gray-50 dark:bg-gray-800 rounded-lg p-1">
                                             <button
-                                                onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                                onClick={() => updateQuantity(item.id, item.quantity - 1, item.flavor)}
                                                 className="w-6 h-6 flex items-center justify-center hover:bg-white dark:hover:bg-gray-700 rounded-md transition-colors text-text-secondary"
                                             >
                                                 <span className="material-symbols-outlined text-[16px]">remove</span>
                                             </button>
                                             <span className="w-8 text-center font-bold text-sm">{item.quantity}</span>
                                             <button
-                                                onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                                onClick={() => updateQuantity(item.id, item.quantity + 1, item.flavor)}
                                                 className="w-6 h-6 flex items-center justify-center hover:bg-white dark:hover:bg-gray-700 rounded-md transition-colors text-primary"
                                             >
                                                 <span className="material-symbols-outlined text-[16px]">add</span>
                                             </button>
                                         </div>
                                         <button
-                                            onClick={() => removeFromCart(item.id)}
+                                            onClick={() => removeFromCart(item.id, item.flavor)}
                                             className="text-gray-400 hover:text-red-500 transition-colors ml-auto p-1"
                                             title="Remover item"
                                         >
