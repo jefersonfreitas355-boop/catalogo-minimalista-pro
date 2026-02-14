@@ -1,0 +1,300 @@
+import React, { useState, useCallback, useMemo } from 'react';
+import { useCart } from '../context/CartContext';
+import { formatCurrency } from '../utils/formatters';
+import PaymentSelector from './PaymentSelector';
+import { CheckoutPayment, PaymentData } from '../types';
+
+
+interface CheckoutModalProps {
+    onClose: () => void;
+}
+
+const CheckoutModal: React.FC<CheckoutModalProps> = ({ onClose }) => {
+    const { cart, totalPrice, clearCart, closeCart } = useCart();
+
+    const [formData, setFormData] = useState({
+        name: '',
+        address: '',
+        reference: '',
+        observations: '',
+        shippingAcknowledged: false
+    });
+
+    const [paymentData, setPaymentData] = useState<CheckoutPayment | null>(null);
+
+    const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    }, []);
+
+    const handleCheckboxChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        setFormData(prev => ({ ...prev, shippingAcknowledged: e.target.checked }));
+    }, []);
+
+    const isValid = useMemo(() =>
+        formData.name.trim() !== '' &&
+        formData.address.trim() !== '' &&
+        formData.shippingAcknowledged &&
+        paymentData !== null,
+        [formData.name, formData.address, formData.shippingAcknowledged, paymentData]
+    );
+
+    const formatPaymentMethod = (method: string): string => {
+        const methods: Record<string, string> = {
+            'pix': '💳 Pix',
+            'dinheiro': '💵 Dinheiro',
+            'credito': '💳 Crédito',
+            'debito': '💳 Débito'
+        };
+        return methods[method] || method;
+    };
+
+    const generatePaymentText = (): string => {
+        if (!paymentData) return '';
+
+        let paymentText = '\n━━━━━━━━━━━━━━━━━━━━━━\n💳 *FORMA DE PAGAMENTO*\n━━━━━━━━━━━━━━━━━━━━━━\n\n';
+
+        if (paymentData.mode === 'total') {
+            const payment = paymentData.payment1!;
+            paymentText += `*[PAGAMENTO TOTAL]*\n`;
+            paymentText += `✅ ${formatPaymentMethod(payment.method)}: ${formatCurrency(payment.amount)}`;
+
+            if (payment.method === 'dinheiro' && payment.changeFor) {
+                const change = payment.changeFor - payment.amount;
+                paymentText += `\n   💵 Troco para: ${formatCurrency(payment.changeFor)}\n   💵 Troco: ${formatCurrency(change)}`;
+            }
+        } else {
+            const payment1 = paymentData.payment1!;
+            const payment2 = paymentData.payment2!;
+
+            paymentText += `*[PAGAMENTO DIVIDIDO]*\n`;
+            paymentText += `✅ ${formatPaymentMethod(payment1.method)}: ${formatCurrency(payment1.amount)}`;
+
+            if (payment1.method === 'dinheiro' && payment1.changeFor) {
+                const change1 = payment1.changeFor - payment1.amount;
+                paymentText += `\n   💵 Troco para: ${formatCurrency(payment1.changeFor)}\n   💵 Troco: ${formatCurrency(change1)}`;
+            }
+
+            paymentText += `\n✅ ${formatPaymentMethod(payment2.method)}: ${formatCurrency(payment2.amount)}`;
+
+            if (payment2.method === 'dinheiro' && payment2.changeFor) {
+                const change2 = payment2.changeFor - payment2.amount;
+                paymentText += `\n   💵 Troco para: ${formatCurrency(payment2.changeFor)}\n   💵 Troco: ${formatCurrency(change2)}`;
+            }
+        }
+
+        return paymentText;
+    };
+
+    const handleSubmit = useCallback((e: React.FormEvent) => {
+        e.preventDefault();
+        if (!isValid || !paymentData) return;
+
+        // Gerar mensagem do WhatsApp
+        const itemsList = cart.map(item => {
+            const itemName = item.flavor
+                ? `${item.name} - Sabor: ${item.flavor}`
+                : item.name;
+            return `${item.quantity}x ${itemName} ... ${formatCurrency(item.price * item.quantity)}`;
+        }).join('\n');
+
+        const total = formatCurrency(totalPrice);
+        const paymentText = generatePaymentText();
+
+        const message = `*NOVO PEDIDO - Catálogo Auxiliar: Ufa Penha*
+
+*Cliente:* ${formData.name}
+*Endereço:* ${formData.address}
+*Ponto de Ref.:* ${formData.reference || 'N/A'}${formData.observations ? `
+*Observações:* ${formData.observations}` : ''}
+
+*Resumo do Pedido:*
+${itemsList}
+
+*SUBTOTAL:* ${total}
+*FRETE:* A definir (por conta do cliente)${paymentText}
+
+_Aguardo a confirmação e o valor do frete para prosseguir._`;
+
+        const encodedMessage = encodeURIComponent(message);
+        const phoneNumber = '552125903295'; // +55 21 2590-3295
+        const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+
+        window.open(whatsappUrl, '_blank');
+
+        // Opcional: Limpar carrinho após envio (ou perguntar ao usuário)
+        // clearCart(); 
+        // closeCart();
+        // onClose();
+    }, [isValid, cart, totalPrice, formData, paymentData]);
+
+    return (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+            <div className="bg-white dark:bg-[#1c2433] w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+
+                {/* Header */}
+                <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-800 bg-surface-light dark:bg-surface-dark">
+                    <h2 className="text-lg font-bold text-text-main dark:text-white flex items-center gap-2">
+                        <span className="material-symbols-outlined text-green-600">send</span>
+                        Finalizar Pedido
+                    </h2>
+                    <button
+                        onClick={onClose}
+                        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors text-text-secondary"
+                    >
+                        <span className="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+
+                {/* Scrollable Content */}
+                <div className="flex-1 overflow-y-auto p-6 space-y-6">
+
+                    {/* Shipping Warning Banner */}
+                    <div className="bg-orange-50 dark:bg-orange-900/20 border-l-4 border-orange-500 p-4 rounded-r-lg shadow-sm">
+                        <div className="flex items-start gap-3">
+                            <span className="material-symbols-outlined text-orange-600 dark:text-orange-500 text-3xl">local_shipping</span>
+                            <div>
+                                <h3 className="font-bold text-orange-800 dark:text-orange-200 text-sm uppercase tracking-wide mb-1">
+                                    Atenção ao Frete
+                                </h3>
+                                <p className="text-sm text-orange-900/80 dark:text-orange-200/80 leading-relaxed">
+                                    O valor do frete <span className="font-black underline">NÃO</span> está incluso no total. Ele será calculado e informado pelo atendente após o recebimento do pedido.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Delivery Time Warning */}
+                    <div className="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 p-4 rounded-r-lg shadow-sm">
+                        <div className="flex items-start gap-3">
+                            <span className="material-symbols-outlined text-blue-600 dark:text-blue-400 text-3xl">schedule</span>
+                            <div>
+                                <h3 className="font-bold text-blue-800 dark:text-blue-200 text-sm uppercase tracking-wide mb-1">
+                                    Horário de Entrega
+                                </h3>
+                                <p className="text-sm text-blue-900/80 dark:text-blue-200/80 leading-relaxed">
+                                    Olá! 👋 Nosso horário de frete é das <span className="font-black">08:00 às 17:00</span>. Pedidos realizados após esse horário serão entregues no próximo dia útil. Obrigado pela compreensão! 😊
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form id="checkout-form" onSubmit={handleSubmit} className="space-y-4">
+                        <div>
+                            <label className="block text-sm font-bold text-text-main dark:text-white mb-1.5">
+                                Nome Completo <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                name="name"
+                                value={formData.name}
+                                onChange={handleChange}
+                                placeholder="Ex: João da Silva"
+                                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-text-main dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
+                                required
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-bold text-text-main dark:text-white mb-1.5">
+                                Endereço de Entrega <span className="text-red-500">*</span>
+                            </label>
+                            <textarea
+                                name="address"
+                                value={formData.address}
+                                onChange={handleChange}
+                                placeholder="Rua, Número, Bairro, Cidade..."
+                                rows={3}
+                                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-text-main dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none resize-none"
+                                required
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-bold text-text-main dark:text-white mb-1.5">
+                                Ponto de Referência
+                            </label>
+                            <input
+                                type="text"
+                                name="reference"
+                                value={formData.reference}
+                                onChange={handleChange}
+                                placeholder="Ex: Ao lado da padaria..."
+                                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-text-main dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-bold text-text-main dark:text-white mb-1.5">
+                                Observações
+                            </label>
+                            <textarea
+                                name="observations"
+                                value={formData.observations}
+                                onChange={handleChange}
+                                placeholder="Alguma informação adicional? (Opcional)"
+                                rows={3}
+                                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-text-main dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none resize-none"
+                            />
+                        </div>
+
+                        {/* Payment Selector */}
+                        <PaymentSelector
+                            totalAmount={totalPrice}
+                            onPaymentChange={setPaymentData}
+                        />
+
+                        {/* Mandatory Checkbox */}
+                        <div className="pt-2">
+                            <label className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${formData.shippingAcknowledged
+                                ? 'border-green-500 bg-green-50 dark:bg-green-900/10'
+                                : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
+                                }`}>
+                                <div className="relative flex items-center">
+                                    <input
+                                        type="checkbox"
+                                        checked={formData.shippingAcknowledged}
+                                        onChange={handleCheckboxChange}
+                                        className="peer sr-only"
+                                    />
+                                    <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${formData.shippingAcknowledged
+                                        ? 'bg-green-500 border-green-500 text-white'
+                                        : 'border-gray-400 bg-white dark:bg-gray-800'
+                                        }`}>
+                                        {formData.shippingAcknowledged && <span className="material-symbols-outlined text-[18px]">check</span>}
+                                    </div>
+                                </div>
+                                <div className="flex-1">
+                                    <p className={`text-sm font-bold leading-tight ${formData.shippingAcknowledged ? 'text-green-800 dark:text-green-400' : 'text-text-main dark:text-white'}`}>
+                                        Estou ciente de que o frete será cobrado à parte.
+                                    </p>
+                                    <p className="text-xs text-text-secondary mt-1">
+                                        Concordo em aguardar o cálculo do valor final.
+                                    </p>
+                                </div>
+                            </label>
+                        </div>
+                    </form>
+                </div>
+
+                {/* Footer */}
+                <div className="p-4 border-t border-gray-100 dark:border-gray-800 bg-surface-light dark:bg-surface-dark">
+                    <button
+                        type="submit"
+                        form="checkout-form"
+                        disabled={!isValid}
+                        className={`w-full py-3.5 rounded-xl font-black text-lg shadow-lg transition-all flex items-center justify-center gap-2 ${isValid
+                            ? 'bg-green-600 hover:bg-green-700 text-white shadow-green-600/20 hover:scale-[1.02] active:scale-[0.98]'
+                            : 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed'
+                            }`}
+                    >
+                        <span>Enviar Pedido</span>
+                        <span className="material-symbols-outlined">send</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default CheckoutModal;

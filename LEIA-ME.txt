@@ -1,0 +1,79 @@
+# GUIA RAPIDO - Atualizar GitHub
+# Repositorio: https://github.com/jefersonfreitas355-boop/catalogo-minimalista-pro
+
+## FORMA MAIS FACIL (Recomendada)
+
+1. Localize o arquivo: `atualizar-github.bat`
+2. Clique DUAS VEZES no arquivo
+3. Escolha a opcao 2 (Force Push) quando solicitado
+4. Faca login no GitHub quando solicitado
+5. PRONTO!
+
+---
+
+## OU use o PowerShell:
+
+1. Clique com botao direito em: `atualizar-github.ps1`
+2. Selecione "Executar com PowerShell"
+3. Escolha a opcao 2 (Force Push)
+4. Faca login no GitHub
+5. PRONTO!
+
+---
+
+## OU execute manualmente:
+
+Abra um NOVO PowerShell e execute:
+
+```powershell
+cd "C:\Users\win10\Downloads\catalogo-minimalista-pro-master\catalogo-minimalista-pro-master"
+
+git init
+git remote remove origin
+git remote add origin https://github.com/jefersonfreitas355-boop/catalogo-minimalista-pro.git
+git add .
+git commit -m "Atualiza projeto com novas funcionalidades"
+git branch -M main
+git push -u origin main --force
+```
+
+---
+
+## Autenticacao
+
+Quando pedir login:
+- Username: jefersonfreitas355-boop
+- Password: Use um Personal Access Token (nao sua senha!)
+
+Como criar o token:
+1. Acesse: https://github.com/settings/tokens
+2. "Generate new token" -> "Generate new token (classic)"
+3. Nome: "Meu Computador"
+4. Marque: repo (todos os sub-itens)
+5. "Generate token"
+6. COPIE O TOKEN
+7. Cole como senha
+
+---
+
+## Verificar se funcionou
+
+Acesse: https://github.com/jefersonfreitas355-boop/catalogo-minimalista-pro
+
+---
+
+## Problemas?
+
+### "Git nao reconhecido"
+- Abra um NOVO PowerShell
+- OU clique duas vezes no arquivo .bat
+
+### "Authentication failed"
+- Use um Personal Access Token (veja secao Autenticacao)
+
+### "Updates were rejected"
+- Escolha a opcao 2 (Force Push)
+
+---
+
+TUDO PRONTO! Basta clicar no arquivo .bat!

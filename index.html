@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Catálogo Minimalista Pro</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet">
+  <!-- Material Symbols -->
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+    rel="stylesheet" />
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#135bec",
+            "primary-hover": "#114cc7",
+            "background-light": "#f6f6f8",
+            "background-dark": "#101622",
+            "surface-light": "#ffffff",
+            "surface-dark": "#1a2230",
+            "text-main": "#111318",
+            "text-secondary": "#616f89",
+          },
+          fontFamily: {
+            "display": ["Manrope", "sans-serif"]
+          },
+          borderRadius: {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "2xl": "1rem",
+            "full": "9999px"
+          },
+          animation: {
+            'pulse-subtle': 'pulse-subtle 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'spin-slow': 'spin 3s linear infinite',
+          },
+          keyframes: {
+            'pulse-subtle': {
+              '0%, 100%': { opacity: '1', transform: 'scale(1)' },
+              '50%': { opacity: '0.95', transform: 'scale(1.02)' },
+            }
+          }
+        },
+      },
+    }
+  </script>
+  <style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+
+    body {
+      font-family: 'Manrope', sans-serif;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background-color: #cbd5e1;
+      border-radius: 20px;
+    }
+
+    /* Quick View Modal Styles (Disabled)
+    #quickview-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(4px);
+      padding: 1rem;
+    }
+
+    .modal-content {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(12px);
+      border-radius: 1.5rem;
+      width: 100%;
+      max-width: 500px;
+      padding: 2rem;
+      position: relative;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      animation: modalFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    @keyframes modalFadeIn {
+      from {
+        opacity: 0;
+        transform: scale(0.95) translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    #dynamic-image {
+      width: 100%;
+      height: 300px;
+      border-radius: 1rem;
+      object-fit: cover;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      margin-bottom: 1.5rem;
+      background: #e2e8f0;
+    }
+
+    .skeleton {
+      background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+      background-size: 200% 100%;
+      animation: skeletonPulse 1.5s infinite;
+    }
+
+    @keyframes skeletonPulse {
+      0% {
+        background-position: 200% 0;
+      }
+
+      100% {
+        background-position: -200% 0;
+      }
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      cursor: pointer;
+      color: #616f89;
+      transition: color 0.2s;
+    }
+
+    .close-btn:hover {
+      color: #111318;
+    }
+    */
+
+    /* Flavor Selection Modal Animations */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes scaleIn {
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .animate-fadeIn {
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    .animate-scaleIn {
+      animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Gradient Animation for Promotions Button */
+    @keyframes gradient {
+      0% {
+        background-position: 0% 50%;
+      }
+
+      50% {
+        background-position: 100% 50%;
+      }
+
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+
+    .animate-gradient {
+      animation: gradient 3s ease infinite;
+    }
+  </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react-router-dom": "https://esm.sh/react-router-dom@^7.11.0",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3"
+  }
+}
+</script>
+
+  <script>
+    /* Quick View Script (Disabled)
+    async function openQuickView(productName, productPrice, productImage) {
+      const modal = document.getElementById('quickview-modal');
+      const img = document.getElementById('dynamic-image');
+      const title = document.getElementById('modal-product-name');
+      const price = document.getElementById('modal-product-price');
+
+      // Cleanup UI before starting
+      img.classList.add('skeleton');
+      img.style.opacity = '0.5';
+
+      title.innerText = productName;
+      price.innerText = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(productPrice);
+      modal.style.display = 'flex';
+
+      // Function to set final image
+      const setFinalImage = (url) => {
+        const tempImg = new Image();
+        tempImg.onload = () => {
+          img.src = url;
+          img.classList.remove('skeleton');
+          img.style.opacity = '1';
+        };
+        tempImg.onerror = () => {
+          console.error('Falha ao carregar imagem:', url);
+          showFallback();
+        };
+        tempImg.src = url;
+      };
+
+      const showFallback = (errorMsg) => {
+        img.classList.remove('skeleton');
+        img.style.opacity = '1';
+        img.src = `https://placehold.co/600x400/135bec/ffffff?text=${encodeURIComponent(productName)}`;
+
+        if (errorMsg) {
+          const statusMsg = document.createElement('p');
+          statusMsg.id = 'modal-status-msg';
+          statusMsg.style.cssText = 'color: #ef4444; font-size: 11px; margin-top: 5px; font-weight: bold; line-height: 1.2;';
+          statusMsg.innerText = `Erro: ${errorMsg}`;
+          if (!document.getElementById('modal-status-msg')) {
+            title.parentNode.insertBefore(statusMsg, price.nextSibling);
+          } else {
+            document.getElementById('modal-status-msg').innerText = `Erro: ${errorMsg}`;
+          }
+        }
+      };
+
+      // 1. Try provided product image first
+      if (productImage && productImage.startsWith('http')) {
+        setFinalImage(productImage);
+        return;
+      }
+
+      // 2. Fallback to Google Search
+      try {
+        const API_KEY = 'AIzaSyBsMNA5bVk-aaVDpN772EG2pGqnmtp2p_Q';
+        const CX_ID = 'f76b39d087f53439c';
+        const query = encodeURIComponent(productName);
+        const url = `https://www.googleapis.com/customsearch/v1?q=${query}&searchType=image&key=${API_KEY}&cx=${CX_ID}&num=1`;
+
+        const response = await fetch(url);
+        if (!response.ok) {
+          const errData = await response.json();
+          let msg = errData.error?.message || 'Erro na pesquisa';
+          if (msg.includes('blocked')) msg = 'A API Custom Search precisa ser ATIVADA no Google Cloud Console.';
+          throw new Error(msg);
+        }
+
+        const data = await response.json();
+        if (data.items && data.items.length > 0) {
+          setFinalImage(data.items[0].link);
+        } else {
+          throw new Error('Nenhuma imagem encontrada no Google.');
+        }
+      } catch (error) {
+        showFallback(error.message);
+      }
+    }
+
+    function closeQuickView() {
+      const modal = document.getElementById('quickview-modal');
+      modal.style.display = 'none';
+    }
+    */
+  </script>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark text-text-main dark:text-white transition-colors duration-200">
+  <div id="root"></div>
+
+  <!-- Quick View Modal (Disabled)
+  <div id="quickview-modal" onclick="if(event.target === this) closeQuickView()">
+    <div class="modal-content">
+      <span class="material-symbols-outlined close-btn" onclick="closeQuickView()">close</span>
+      <img id="dynamic-image" class="skeleton" src="" alt="Produto">
+      <h2 id="modal-product-name" class="text-2xl font-black mb-1">Nome do Produto</h2>
+      <div id="modal-product-price" class="text-primary font-bold text-xl">R$ 0,00</div>
+      <button onclick="closeQuickView()"
+        class="w-full mt-6 py-3 bg-primary text-white rounded-xl font-bold hover:bg-primary-hover transition-colors">
+        Fechar
+      </button>
+    </div>
+  </div>
+  -->
+
+  <script type="module" src="/index.tsx"></script>
+</body>
+
+</html>
