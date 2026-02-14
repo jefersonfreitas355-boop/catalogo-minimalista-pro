@@ -1,6 +1,7 @@
 
+import PrivacyPolicy from './pages/PrivacyPolicy';
 import React from 'react';
-import { HashRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, useLocation, Link } from 'react-router-dom';
 import Home from './pages/Home';
 import Catalog from './pages/Catalog';
 import Admin from './pages/Admin';
@@ -27,11 +28,14 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               <p className="text-text-secondary dark:text-gray-500 text-sm font-bold uppercase tracking-widest">
                 © 2026 Artmindsgrafhics | Catálogo Auxiliar
               </p>
-              <p className="text-text-secondary dark:text-gray-500 text-xs font-medium max-w-2xl">
-                Este site é uma ferramenta de apoio ao cliente. Não representa a marca oficial.
-              </p>
+              <div className="flex items-center justify-center gap-4 text-xs font-medium text-text-secondary dark:text-gray-500">
+                <p>Este site é uma ferramenta de apoio ao cliente.</p>
+                <span>•</span>
+                <Link to="/privacy" className="hover:text-primary transition-colors underline decoration-dotted">
+                  Política de Privacidade (LGPD)
+                </Link>
+              </div>
             </div>
-
 
             <div className="flex items-center gap-6">
               {!location.pathname.endsWith('/') && location.pathname !== '/catalogo-minimalista-pro-master/' && (
@@ -60,6 +64,7 @@ const App: React.FC = () => {
             <Route path="/" element={<Home />} />
             <Route path="/catalog" element={<Catalog />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
           </Routes>
         </Layout>
       </Router>
